@@ -104,13 +104,13 @@ class PyTodo:
     LOG.info('deleting task')
 
   def tray_icon_clicked(self, widget, event, data=None):
-    print 'Tray icon clicked %s %s' % (event, data)
+    LOG.info('Tray icon clicked')
     if self.window.is_active():
       self.window.iconify()
       self.window.set_skip_taskbar_hint(True)
     else:
-      self.window.present()
       self.window.set_skip_taskbar_hint(False)
+      self.window.present()
 
   def save_show_completed(self, widget, event, data=None):
     LOG.info('setting show completed to %s' % self.show_completed_button.get_active())
