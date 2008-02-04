@@ -1,26 +1,27 @@
 import pygtk
 pygtk.require('2.0')
 import gtk, logging
-from pysqlite2 import dbapi2 as sqlite
+from db.db import Database
 
-# connect to the database
-DB = sqlite.connect('pytodo.db')
+DB = Database()
 
 # setup the logger
 level = logging.DEBUG
-f = '%(asctime)s - %(levelname)s - %(lineno)d - %(message)s'
+f = '%(asctime)s: %(levelname)s; %(name)s (%(lineno)d) %(message)s'
 
 LOG = logging.getLogger('PyTodo')
 LOG.setLevel(level)
+
 ch = logging.StreamHandler()
 ch.setLevel(level)
+
 formatter = logging.Formatter(f)
 ch.setFormatter(formatter)
 LOG.addHandler(ch)
 
 class PyTodo:
   def __init__(self):
-    self.__check_tables()
+    DB.check_tables()
     self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.window.set_title('PyTodo')
     self.window.set_border_width(5)
@@ -28,12 +29,12 @@ class PyTodo:
     self.__add_controls()
     
     # restore size and position preferences
-    height, width, top, left = self.__get_size_and_pos()
+    height, width, top, left = DB.get_size_and_pos()
     self.window.resize(width, height)
     self.window.move(left, top)
     
     # restore the setting for whether or not completed tasks are to be shown
-    sc = self.__get_preference('show_completed') == 'True'
+    sc = DB.get_setting('show_completed') == 'True'
     self.show_completed_button.set_active(sc)
     
     self.window.show_all()
@@ -84,76 +85,6 @@ class PyTodo:
     
     self.tree_scroller.show()
     self.window.add(self.vbox)
-    
-  def __check_tables(self):
-    query = """
-    create table if not exists tasks (
-      id integer primary key autoincrement, 
-      parent_id integer null,
-      description text not null,
-      complete boolean default false,
-      date_created datetime default CURRENT_TIMESTAMP,
-      date_due datetime default null
-    )
-    """
-    DB.execute(query)
-    
-    query = """
-    create table if not exists preferences (
-      key text primary key, 
-      value text not null
-    )
-    """
-    DB.execute(query)
-    
-    try:
-      DB.execute("insert into preferences values ('height', '300')")
-      DB.execute("insert into preferences values ('width', '200')")
-    except:
-      LOG.info('Size preferences already exist...')
-      
-    try:
-      DB.execute("insert into preferences values ('top', '0')")
-      DB.execute("insert into preferences values ('left', '0')")
-    except:
-      LOG.info('Position preferences already exist...')
-      
-    try:
-      DB.execute("insert into preferences values ('show_completed', 'False')")
-    except:
-      LOG.info('Task display preferences already exist...')
-  
-  def __get_preference(self, key):
-    query = "select value from preferences where key = '%s' limit 1" % key
-    # print query
-    value = DB.execute(query).fetchone()[0]
-    # print value
-    return value
-
-  def __set_preference(self, key, value):
-    query = "update preferences set value = '%s' where key = '%s'" % (value, key)
-    # print query
-    return DB.execute(query)
-  
-  def __get_size_and_pos(self):
-    height = int(self.__get_preference('height'))
-    width = int(self.__get_preference('width'))
-    top = int(self.__get_preference('top'))
-    left = int(self.__get_preference('left'))
-    return height, width, top, left
-  
-  def __save_settings(self):
-    LOG.info('Saving application settings')
-    width, height = self.window.get_size()
-    self.__set_preference('height', height)
-    self.__set_preference('width', width)
-    
-    left, top = self.window.get_position()
-    self.__set_preference('top', top)
-    self.__set_preference('left', left)
-    
-    DB.commit()
-    DB.close()
   
   def add_task(self, widget, event, data=None):
     LOG.info('adding task')
@@ -166,12 +97,22 @@ class PyTodo:
     
   def save_show_completed(self, widget, event, data=None):
     LOG.info('setting show completed to %s' % self.show_completed_button.get_active())
-    self.__set_preference('show_completed', self.show_completed_button.get_active())
+    DB.set_setting('show_completed', self.show_completed_button.get_active())
     
   def destroy(self, widget, event=None, data=None):
     self.__save_settings()
+    DB.save_settings()
     gtk.main_quit()
     return False
+  
+  def __save_settings(self):
+    width, height = self.window.get_size()
+    DB.set_setting('height', height)
+    DB.set_setting('width', width)
+    
+    left, top = self.window.get_position()
+    DB.set_setting('top', top)
+    DB.set_setting('left', left)
 
 def main():
   gtk.main()
