@@ -72,25 +72,36 @@ class PyTodo:
     self.vbox.pack_start(self.tree_scroller, True, True, 0)
 
     # create the TreeStore
-    self.treestore = gtk.TreeStore(str, str, 'gboolean')
+    self.treestore = gtk.TreeStore('gboolean', str, str)
 
     self.treeview = gtk.TreeView(self.treestore)
-
+    
     # create the columns
-    self.description_col = gtk.TreeViewColumn('Description')
-    self.description_cell = gtk.CellRendererText()
-    self.description_col.pack_start(self.description_cell, True)
-    self.treeview.append_column(self.description_col)
-
-    self.date_due_col = gtk.TreeViewColumn('Due')
-    self.date_due_cell = gtk.CellRendererText()
-    self.date_due_col.pack_start(self.date_due_cell, True)
-    self.treeview.append_column(self.date_due_col)
-
-    self.completed_col = gtk.TreeViewColumn(' ')
-    self.completed_cell = gtk.CellRendererToggle()
-    self.completed_col.pack_start(self.completed_cell, True)
-    self.treeview.append_column(self.completed_col)
+    self.columns = []
+    self.cells = []
+    self.column_names = [' ', 'Description', 'Due']
+    index = 0
+    for col in self.column_names:
+      if index == 0:
+        cell = gtk.CellRendererToggle()
+        cell.set_property('activatable', True)
+        cell.connect('toggled', self.toggle_task_complete, None)
+        
+        c = gtk.TreeViewColumn(col, cell)
+        c.add_attribute(cell, 'active', index)
+        #c.add_attribute(cell, 'activate', 2)
+      else:
+        cell = gtk.CellRendererText()
+        c = gtk.TreeViewColumn(col, cell)
+        c.add_attribute(cell, 'text', index)
+      
+      c.set_resizable(True)
+      c.set_sort_column_id(index)
+      
+      index += 1
+      
+      self.columns.append(c)
+      self.treeview.append_column(c)
 
     self.tree_scroller.add(self.treeview)
 
@@ -112,9 +123,13 @@ class PyTodo:
 
   def add_task(self, widget, event, data=None):
     LOG.info('adding task')
+    self.treestore.append(None, [False, 'description', 'due'])
 
   def edit_task(self, widget, event, data=None):
     LOG.info('editing task')
+    
+  def toggle_task_complete(self, widget, event, data=None):
+    LOG.info('toggling task complete')
 
   def delete_task(self, widget, event, data=None):
     LOG.info('deleting task')
