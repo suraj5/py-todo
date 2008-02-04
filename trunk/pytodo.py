@@ -28,14 +28,6 @@ class PyTodo:
     self.window.connect('delete_event', self.destroy)
     self.__add_controls()
 
-    # create a system tray icon
-    self.tray_icon = gtk.StatusIcon()
-    self.tray_icon.set_from_stock(gtk.STOCK_HOME)
-    self.tray_icon.set_tooltip('PyTodo')
-    self.tray_icon.set_blinking(True)
-    self.tray_icon.connect('activate', self.tray_icon_clicked, None)
-    #self.tray_icon.show()
-
     # restore size and position preferences
     height, width, top, left = DB.get_size_and_pos()
     self.window.resize(width, height)
@@ -84,6 +76,22 @@ class PyTodo:
 
     self.treeview = gtk.TreeView(self.treestore)
 
+    # create the columns
+    self.description_col = gtk.TreeViewColumn('Description')
+    self.description_cell = gtk.CellRendererText()
+    self.description_col.pack_start(self.description_cell, True)
+    self.treeview.append_column(self.description_col)
+
+    self.date_due_col = gtk.TreeViewColumn('Due')
+    self.date_due_cell = gtk.CellRendererText()
+    self.date_due_col.pack_start(self.date_due_cell, True)
+    self.treeview.append_column(self.date_due_col)
+
+    self.completed_col = gtk.TreeViewColumn(' ')
+    self.completed_cell = gtk.CellRendererToggle()
+    self.completed_col.pack_start(self.completed_cell, True)
+    self.treeview.append_column(self.completed_col)
+
     self.tree_scroller.add(self.treeview)
 
     # show/hide completed tasks button
@@ -93,6 +101,14 @@ class PyTodo:
 
     self.tree_scroller.show()
     self.window.add(self.vbox)
+
+    # create a system tray icon
+    self.tray_icon = gtk.StatusIcon()
+    self.tray_icon.set_from_stock(gtk.STOCK_APPLY)
+    self.tray_icon.set_tooltip('PyTodo')
+    #self.tray_icon.set_blinking(True)
+    self.tray_icon.connect('activate', self.tray_icon_clicked, None)
+    self.tray_icon.set_visible(True)
 
   def add_task(self, widget, event, data=None):
     LOG.info('adding task')
@@ -119,6 +135,9 @@ class PyTodo:
   def destroy(self, widget, event=None, data=None):
     self.__save_settings()
     DB.save_settings()
+
+    self.tray_icon.set_visible(False)
+
     gtk.main_quit()
     return False
 
