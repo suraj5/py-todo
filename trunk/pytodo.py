@@ -72,36 +72,38 @@ class PyTodo:
     self.vbox.pack_start(self.tree_scroller, True, True, 0)
 
     # create the TreeStore
-    self.treestore = gtk.TreeStore('gboolean', str, str)
+    self.treestore = gtk.TreeStore(str, str, 'gboolean')
 
     self.treeview = gtk.TreeView(self.treestore)
-    
+
     # create the columns
     self.columns = []
     self.cells = []
-    self.column_names = [' ', 'Description', 'Due']
+    self.column_names = ['Description', 'Due', 'Complete']
     index = 0
     for col in self.column_names:
-      if index == 0:
+      if index == 2:
         cell = gtk.CellRendererToggle()
         cell.set_property('activatable', True)
         cell.connect('toggled', self.toggle_task_complete, None)
-        
+
         c = gtk.TreeViewColumn(col, cell)
         c.add_attribute(cell, 'active', index)
-        #c.add_attribute(cell, 'activate', 2)
+        #c.add_attribute(cell, 'activatable', index)
       else:
         cell = gtk.CellRendererText()
         c = gtk.TreeViewColumn(col, cell)
         c.add_attribute(cell, 'text', index)
-      
+
       c.set_resizable(True)
       c.set_sort_column_id(index)
-      
+
       index += 1
-      
+
       self.columns.append(c)
       self.treeview.append_column(c)
+
+    self.treeview.set_reorderable(True)
 
     self.tree_scroller.add(self.treeview)
 
@@ -123,13 +125,15 @@ class PyTodo:
 
   def add_task(self, widget, event, data=None):
     LOG.info('adding task')
-    self.treestore.append(None, [False, 'description', 'due'])
+    self.treestore.append(None, ['description', 'due', False])
 
   def edit_task(self, widget, event, data=None):
     LOG.info('editing task')
-    
-  def toggle_task_complete(self, widget, event, data=None):
+
+  def toggle_task_complete(self, widget, path, data=None):
     LOG.info('toggling task complete')
+    LOG.info('Path: %s' % path)
+    widget.set_active(not widget.get_active())
 
   def delete_task(self, widget, event, data=None):
     LOG.info('deleting task')
@@ -164,6 +168,34 @@ class PyTodo:
     left, top = self.window.get_position()
     DB.set_setting('top', top)
     DB.set_setting('left', left)
+
+class TaskListModel:
+  def make_view(self, model):
+    self.view = gtk.TreeView(model)
+
+    self.desc_renderer = gtk.CellRendererText()
+    self.desc_renderer.set_property('editable', True)
+    self.desc_renderer.connect('edited', self.description_edited_cb, model)
+
+    self.due_renderer = gtk.CellRendererText()
+    self.due_renderer.set_property('editable', True)
+    self.due_renderer.connect('edited', self.due_date_edited_cb, model)
+
+    self.complete_renderer = gtk.CellRendererToggle()
+    self.complete_renderer.set_property('activatable', True)
+    self.complete_renderer.connect( 'toggled', self.completed_toggled_cb, model)
+
+    self.column0 = gtk.TreeViewColumn('Task', self.desc_renderer, text=0)
+    self.column1 = gtk.TreeViewColumn('Due', self.due_renderer, text=1)
+
+    self.column2 = gtk.TreeViewColumn('Complete', self.complete_renderer)
+    self.column2.add_attribute(self.complete_renderer, 'active', 2)
+
+    self.view.append_column(self.column0)
+    self.view.append_column(self.column1)
+    self.view.append_column(self.column2)
+
+    return self.view
 
 def main():
   gtk.main()
