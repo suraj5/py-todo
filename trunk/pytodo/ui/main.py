@@ -40,7 +40,7 @@ class MainFrame(wx.Frame):
         self.sizer.AddF(controls, wx.SizerFlags(0).Expand().Border(wx.BOTTOM, 10))
 
         # task list
-        self.tasks = wx.ListCtrl(self.panel, style=wx.BORDER_SUNKEN)
+        self.tasks = wx.ListCtrl(self.panel, style=wx.BORDER_SUNKEN|wx.LC_REPORT)
         self.sizer.Add(self.tasks, proportion=1, flag=wx.EXPAND)
     
     def OnAddTask(self, event):
