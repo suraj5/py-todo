@@ -64,6 +64,7 @@ class AddEditTask(wx.Dialog):
         super(AddEditTask, self).__init__(parent, title='%s New Task' % action, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.DIALOG_MODAL)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.SetMinSize((515, 230))
+        self.CenterOnScreen()
         
         # panels and sizers
         psizer = wx.BoxSizer(wx.VERTICAL)
@@ -74,11 +75,8 @@ class AddEditTask(wx.Dialog):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.panel.SetSizer(self.sizer)
         
-        bottom_bdr = wx.SizerFlags(0).Expand().Border(wx.BOTTOM, 5)
-        
         detail_sizer = wx.FlexGridSizer(hgap=5, vgap=5, rows=2, cols=4)
         detail_sizer.AddGrowableCol(1, proportion=1)
-        #detail_sizer.AddGrowableCol(3, proportion=1)
         
         # task name
         detail_sizer.Add(wx.StaticText(self.panel, label='Task:'), flag=wx.ALIGN_CENTER_VERTICAL)
@@ -104,7 +102,7 @@ class AddEditTask(wx.Dialog):
         self.sizer.Add(detail_sizer, flag=wx.EXPAND)
         
         # description
-        self.sizer.Add(wx.StaticText(self.panel, label='Description:'))
+        self.sizer.AddF(wx.StaticText(self.panel, label='Description:'), wx.SizerFlags(0).Border(wx.TOP|wx.BOTTOM, 5))
         self.description = wx.TextCtrl(self.panel, style=wx.BORDER_SUNKEN|wx.TE_MULTILINE|wx.TE_AUTO_SCROLL)
         self.sizer.Add(self.description, proportion=1, flag=wx.EXPAND)
         
@@ -117,3 +115,4 @@ class AddEditTask(wx.Dialog):
     def OnClose(self, event):
         print self.due_by.GetValue()
         self.Destroy()
+
