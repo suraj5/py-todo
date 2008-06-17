@@ -1,4 +1,14 @@
-import metakit
+try:
+    # try to use metakit first
+    import metakit
+except ImportError:
+    # fall back to sqlite if metakit isn't available
+    try:
+        # prefer sqlite3 for python 2.5 and greater
+        from sqlite3 import dbapi2 as sqlite
+    except ImportError:
+        from pysqlite2 import dbapi2 as sqlite
+
 import os
 
 print 'Using MetaKit %s' % metakit.version
