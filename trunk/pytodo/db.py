@@ -16,3 +16,17 @@ class DBA:
     
     def __init__(self):
         pass
+    
+    def save_task(self, task):
+        pass
+
+class Task(object):
+    def __init__(self, id=0, task=None, priority=None, tags=None, due_by=None,
+                 description=None, completed=None):
+        self.id = id
+        self.task = task
+        self.priority = priority
+        self.tags = tags
+        self.due_by = due_by
+        self.description = description
+        self.completed = completed
